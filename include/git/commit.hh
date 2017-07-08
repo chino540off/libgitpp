@@ -3,55 +3,68 @@
 
 # include <git2.h>
 
-# include <functional>
+# include <memory>
 
 # include <git/exceptions.hh>
-# include <git/repository.hh>
+# include <git/tree.hh>
 
 namespace git {
 
 class commit
 {
-  private:
-    typedef std::function<void(char const * root,
-                               git_tree_entry const * entry)> walk_tree_cb_t;
-
   public:
-    commit(std::shared_ptr<repository> const repo, std::string const & str)
-    {
-      guard(git_oid_fromstr(&id_, str.c_str()));
-      guard(git_commit_lookup(&commit_, repo->value(), &id_));
-    }
+    commit(git_commit * c): commit_(c) { }
 
-    ~commit()
-    {
-      git_commit_free(commit_);
-    }
+    ~commit() { git_commit_free(commit_); }
 
   public:
     /**
-     * @brief Walk the commit tree
+     * @brief Lookup into a repository with an oid
      *
-     * @param cb a callback on tree entry
+     * @tparam repository_type repository type
+     * @param r the repository to lookup
+     * @param oid the commit oid
+     *
+     * @return a wrapper to the commit
      */
-    void tree_walk(walk_tree_cb_t cb)
+    template <typename repository_type>
+    static auto lookup(std::shared_ptr<repository_type> const & r,
+                       git_oid const * oid)
     {
-      git_tree * tree;
+      git_commit * c = nullptr;
 
-      guard(git_commit_tree(&tree, commit_));
+      guard(git_commit_lookup(&c, r->value(), oid));
 
-      git_tree_walk(tree, GIT_TREEWALK_PRE,
-                    [](char const * root, git_tree_entry const * entry, void * data)
-                    {
-                      (*static_cast<decltype(cb)*>(data))(root, entry);
-                      return 0;
-                    }, &cb);
+      return std::make_shared<commit>(c);
+    }
 
-      git_tree_free(tree);
+    /**
+     * @brief Lookup into a repository with a SHA1 string
+     *
+     * @tparam repository_type repository type
+     * @param r the repository to lookup
+     * @param str the SHA1 string
+     *
+     * @return a wrapper to the commit
+     */
+    template <typename repository_type>
+    static auto lookup(std::shared_ptr<repository_type> const & r,
+                       std::string const & str)
+    {
+      git_oid oid;
+
+      guard(git_oid_fromstr(&oid, str.c_str()));
+
+      return lookup(r, &oid);
+    }
+
+  public:
+    std::shared_ptr<tree> get_tree() const
+    {
+      return std::make_shared<tree>(commit_);
     }
 
   private:
-    git_oid id_;
     git_commit * commit_;
 };
 
