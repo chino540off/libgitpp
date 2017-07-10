@@ -59,10 +59,7 @@ class commit
     }
 
   public:
-    std::shared_ptr<tree> get_tree() const
-    {
-      return std::make_shared<tree>(commit_);
-    }
+    auto value() const { return commit_; }
 
   private:
     git_commit * commit_;

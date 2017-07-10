@@ -4,10 +4,13 @@
 # include <git2.h>
 
 # include <functional>
+# include <memory>
 
 # include <git/exceptions.hh>
 
 namespace git {
+
+class commit;
 
 class tree
 {
@@ -27,20 +30,34 @@ class tree
     };
 
   private:
-    typedef std::function<int(std::string const & root,
-                              tree::entry const & entry)> walk_tree_cb_t;
+    typedef std::function<int(std::string const &,
+                              tree::entry const &)> walk_tree_cb_t;
 
   public:
-    tree(git_commit const * c)
+    tree(git_tree * t): tree_(t) { }
+
+    ~tree() { git_tree_free(tree_); }
+
+  public:
+    /**
+     * @brief Lookup into a repository with a commit
+     *
+     * @tparam commit_type commit type
+     * @param c the commit to look for
+     *
+     * @return a wrapper to a tree
+     */
+    template <typename commit_type>
+    static auto lookup(std::shared_ptr<commit_type> const & c)
     {
-      guard(git_commit_tree(&tree_, c));
+      git_tree * t = nullptr;
+
+      guard(git_commit_tree(&t, c->value()));
+
+      return std::make_shared<tree>(t);
     }
 
-    ~tree()
-    {
-      git_tree_free(tree_);
-    }
-
+  public:
     /**
      * @brief Walk the tree
      *
