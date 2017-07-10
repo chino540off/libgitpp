@@ -60,6 +60,21 @@ class reference
     }
 
   public:
+    /**
+     * @brief Resolve reference (in case of symbolic refs like HEAD)
+     *
+     * @return return a new wrapper to the resolved reference
+     */
+    auto resolve() const
+    {
+      git_reference * real_ref = nullptr;
+
+      guard(git_reference_resolve(&real_ref, reference_));
+
+      return std::make_shared<reference>(real_ref);
+    }
+
+  public:
     auto target() const { return git_reference_target(reference_); }
     auto name() const { return git_reference_name(reference_); }
     auto type() const { return git_reference_type(reference_); }
