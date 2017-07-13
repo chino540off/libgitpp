@@ -2,6 +2,7 @@
 
 #include <git/reference.hh>
 #include <git/repository.hh>
+#include <git/oid.hh>
 
 int main(int /* argc */, char const * argv[])
 {
@@ -9,7 +10,9 @@ int main(int /* argc */, char const * argv[])
 
   git::reference::foreach(r, [](git::reference & ref)
   {
-    std::cout << ref.type() << " " << ref.name() << " " << git_oid_tostr_s(ref.target()) << std::endl;
+    auto oid = git::oid(ref.target());
+
+    std::cout << ref.type() << " " << ref.name() << " " << oid.str() << std::endl;
     return 0;
   });
 }

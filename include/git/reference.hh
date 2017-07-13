@@ -4,8 +4,10 @@
 # include <git2.h>
 
 # include <memory>
+# include <functional>
 
 # include <git/exceptions.hh>
+# include <git/oid.hh>
 
 namespace git {
 
