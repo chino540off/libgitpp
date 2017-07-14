@@ -25,21 +25,11 @@ class repository
     ~repository()
     {
       git_repository_free(repo_);
+
+      git_libgit2_shutdown();
     }
 
   public:
-    /**
-     * @brief Create a wrapper from an existing git_repository
-     *
-     * @param repo an existing git_repository
-     *
-     * @return a wrapper of the repository
-     */
-    static auto open(git_repository * repo)
-    {
-      return std::make_shared<repository>(repo);
-    }
-
     /**
      * @brief Create a wrapper on a local path
      *
@@ -49,6 +39,8 @@ class repository
      */
     static auto open(std::string const & path)
     {
+      git_libgit2_init();
+
       return std::make_shared<repository>(path);
     }
 
@@ -63,6 +55,8 @@ class repository
      */
     static auto clone(std::string const & url, std::string const & path, bool bare = true)
     {
+      git_libgit2_init();
+
       git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
       git_checkout_options checkout_opts = GIT_CHECKOUT_OPTIONS_INIT;
 
@@ -73,7 +67,7 @@ class repository
 
       guard(git_clone(&repo, url.c_str(), path.c_str(), &clone_opts));
 
-      return open(repo);
+      return std::make_shared<repository>(repo);
     }
 
   public:
@@ -110,12 +104,14 @@ class repository
      */
     static auto is_repo(std::string const & path)
     {
+      git_libgit2_init();
+
       return git_repository_open_ext(nullptr, path.c_str(),
                                      GIT_REPOSITORY_OPEN_NO_SEARCH, nullptr) == 0;
     }
 
   public:
-    auto const value() const
+    auto value() const
     {
       return repo_;
     }
