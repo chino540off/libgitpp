@@ -1,0 +1,32 @@
+sudo: required
+language: cpp
+
+matrix:
+  include:
+  - os: linux
+    compiler: gcc
+    env: CC=gcc
+    env: CXX=g++
+
+  - os: linux
+    compiler: clang
+    env: CC=clang
+    env: CXX=clang++
+
+  - os: osx
+    osx_image: xcode7.3
+    compiler: clang
+    env: CC=clang
+    env: CXX=clang++
+
+install:
+  - sudo apt-get -y update
+  - sudo apt-get -y install libgit2-dev
+
+before_script:
+  - ${CC}  --version
+  - ${CXX} --version
+  - ./build.sh build
+
+script:
+  - ./build.sh test
