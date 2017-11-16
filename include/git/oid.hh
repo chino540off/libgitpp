@@ -17,7 +17,10 @@ class oid
   public:
     std::string str() const
     {
-      return std::string(git_oid_tostr_s(oid_));
+      char str[GIT_OID_HEXSZ + 1];
+      git_oid_tostr(str, sizeof (str), oid_);
+
+      return std::string(str);
     }
 
   private:

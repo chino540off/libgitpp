@@ -26,7 +26,11 @@ class repository
     {
       git_repository_free(repo_);
 
+# if LIBGIT2_SOVERSION >= 22
       git_libgit2_shutdown();
+# else
+      git_threads_shutdown();
+# endif
     }
 
   public:
@@ -39,7 +43,12 @@ class repository
      */
     static auto open(std::string const & path)
     {
+# if LIBGIT2_SOVERSION >= 22
       git_libgit2_init();
+      git_libgit2_features();
+# else
+      git_threads_init();
+# endif
 
       return std::make_shared<repository>(path);
     }
@@ -55,7 +64,12 @@ class repository
      */
     static auto clone(std::string const & url, std::string const & path, bool bare = true)
     {
+# if LIBGIT2_SOVERSION >= 22
       git_libgit2_init();
+      git_libgit2_features();
+# else
+      git_threads_init();
+# endif
 
       git_clone_options clone_opts = GIT_CLONE_OPTIONS_INIT;
       git_checkout_options checkout_opts = GIT_CHECKOUT_OPTIONS_INIT;
@@ -78,13 +92,24 @@ class repository
      */
     void fetch(std::string const & remote = "origin")
     {
-      git_fetch_options fetch_opts = GIT_FETCH_OPTIONS_INIT;
-
       git_remote * r = nullptr;
 
+# if LIBGIT2_SOVERSION >= 22
       guard(git_remote_lookup(&r, repo_, remote.c_str()));
+# else
+      guard(git_remote_load(&r, repo_, remote.c_str()));
+# endif
+
+# if LIBGIT2_SOVERSION >= 23
+      git_fetch_options fetch_opts = GIT_FETCH_OPTIONS_INIT;
 
       int ret = git_remote_fetch(r, nullptr, &fetch_opts, nullptr);
+# else
+      int ret = 0;
+      git_remote_connect(r, GIT_DIRECTION_FETCH);
+      git_remote_download(r);
+      git_remote_disconnect(r);
+# endif
       if (ret != 0)
       {
         git_remote_free(r);
@@ -104,7 +129,12 @@ class repository
      */
     static auto is_repo(std::string const & path)
     {
+# if LIBGIT2_SOVERSION >= 22
       git_libgit2_init();
+      git_libgit2_features();
+# else
+      git_threads_init();
+# endif
 
       return git_repository_open_ext(nullptr, path.c_str(),
                                      GIT_REPOSITORY_OPEN_NO_SEARCH, nullptr) == 0;
