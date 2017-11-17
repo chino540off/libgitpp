@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -6,25 +6,38 @@ PROJECT(hugtak)
 
 INCLUDE(CheckIncludeFiles)
 
-FIND_PACKAGE(Libgit2 REQUIRED)
+# For some external project macros
+INCLUDE(ExternalProject)
 
-MACRO(use_cxx14)
-  IF(CMAKE_VERSION VERSION_LESS "3.1")
-    SET(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
-  ELSE()
-    SET(CMAKE_CXX_STANDARD 14)
-    SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-  ENDIF()
-ENDMACRO(use_cxx14)
+# Download libgit2 from git and build it
 
-use_cxx14()
+EXTERNALPROJECT_ADD(
+    libgit2
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libgit2
+    GIT_REPOSITORY https://github.com/libgit2/libgit2.git
+    GIT_TAG "v0.24.0"
+    CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    BUILD_COMMAND make
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND make install
+)
+SET(LIBGIT2_INCLUDE_DIRS  ${CMAKE_INSTALL_PREFIX}/include)
+SET(LIBGIT2_LIBRARIES     ${CMAKE_INSTALL_PREFIX}/lib/libgit2.so)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Wextra -Wno-multichar -pedantic")
-SET(CMAKE_CXX_FLAGS_DEBUG " -O0 -ggdb -fprofile-arcs -ftest-coverage")
-SET(CMAKE_BUILD_TYPE Debug)
+SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+SET(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -W -Wall -Wextra -Werror -Wno-multichar -pedantic")
+SET(CMAKE_CXX_FLAGS_DEBUG   " -O0 -ggdb -fprofile-arcs -ftest-coverage")
+SET(CMAKE_CXX_FLAGS_RELEASE " -O2")
+
+IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  SET(CMAKE_CXX_FLAGS       "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+ENDIF()
 
 INCLUDE_DIRECTORIES(
   ${PROJECT_SOURCE_DIR}/include
+  ${LIBGIT2_INCLUDE_DIRS}
 )
 
 # Test app

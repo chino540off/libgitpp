@@ -11,6 +11,7 @@ function _build()
   cmake \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_MODULE_PATH=$PWD/../cmake \
+    -DCMAKE_INSTALL_PREFIX=$PWD/../local \
     ..
   make
 }
