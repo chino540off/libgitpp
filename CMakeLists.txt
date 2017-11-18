@@ -11,16 +11,16 @@ INCLUDE(ExternalProject)
 
 # Download libgit2 from git and build it
 
-EXTERNALPROJECT_ADD(
-    libgit2
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libgit2
-    GIT_REPOSITORY https://github.com/libgit2/libgit2.git
-    GIT_TAG "v0.24.0"
-    CONFIGURE_COMMAND cmake . -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    BUILD_COMMAND make
-    BUILD_IN_SOURCE 1
-    INSTALL_COMMAND make install
-)
+EXTERNALPROJECT_ADD(libgit2
+                    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libgit2
+                    GIT_REPOSITORY https://github.com/libgit2/libgit2.git
+                    GIT_TAG "v0.25.1"
+                    CONFIGURE_COMMAND ${CMAKE_COMMAND} .
+                                        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                                        -DCMAKE_BUILD_TYPE=${DCMAKE_BUILD_TYPE}
+                    BUILD_COMMAND make
+                    BUILD_IN_SOURCE 1
+                    INSTALL_COMMAND make install)
 SET(LIBGIT2_INCLUDE_DIRS  ${CMAKE_INSTALL_PREFIX}/include)
 SET(LIBGIT2_LIBRARIES     ${CMAKE_INSTALL_PREFIX}/lib/libgit2.so)
 
