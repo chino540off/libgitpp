@@ -8,6 +8,20 @@
 
 # include <git/exceptions.hh>
 
+# define LIBGIT2_INIT()       \
+do                            \
+{                             \
+  git_libgit2_init();         \
+  git_libgit2_features();     \
+} while(0)
+
+# define LIBGIT2_SHUTDOWN()   \
+do                            \
+{                             \
+  git_libgit2_shutdown();     \
+} while(0)
+
+
 namespace git {
 
 class repository
@@ -26,7 +40,7 @@ class repository
     {
       git_repository_free(repo_);
 
-      git_libgit2_shutdown();
+      LIBGIT2_SHUTDOWN();
     }
 
   public:
@@ -39,8 +53,7 @@ class repository
      */
     static auto open(std::string const & path)
     {
-      git_libgit2_init();
-      git_libgit2_features();
+      LIBGIT2_INIT();
 
       return std::make_shared<repository>(path);
     }
@@ -56,8 +69,7 @@ class repository
      */
     static auto clone(std::string const & url, std::string const & path, bool bare = true)
     {
-      git_libgit2_init();
-      git_libgit2_features();
+      LIBGIT2_INIT();
 
       git_clone_options clone_opts;
       git_checkout_options checkout_opts;
@@ -70,7 +82,10 @@ class repository
 
       git_repository * repo = nullptr;
 
-      guard(git_clone(&repo, url.c_str(), path.c_str(), &clone_opts));
+      guard(git_clone(&repo, url.c_str(), path.c_str(), &clone_opts), []()
+      {
+        LIBGIT2_SHUTDOWN();
+      });
 
       return std::make_shared<repository>(repo);
     }
@@ -91,14 +106,10 @@ class repository
 
       git_fetch_init_options(&fetch_opts, GIT_FETCH_OPTIONS_VERSION);
 
-      int ret = git_remote_fetch(r, nullptr, &fetch_opts, nullptr);
-      if (ret != 0)
+      guard(git_remote_fetch(r, nullptr, &fetch_opts, nullptr), [r]()
       {
         git_remote_free(r);
-        guard(ret);
-      }
-
-      git_remote_free(r);
+      });
     }
 
   public:
@@ -111,11 +122,18 @@ class repository
      */
     static auto is_repo(std::string const & path)
     {
-      git_libgit2_init();
-      git_libgit2_features();
+      git_repository * r = nullptr;
 
-      return git_repository_open_ext(nullptr, path.c_str(),
-                                     GIT_REPOSITORY_OPEN_NO_SEARCH, nullptr) == 0;
+      LIBGIT2_INIT();
+
+      auto ret = git_repository_open_ext(&r, path.c_str(),
+                                         GIT_REPOSITORY_OPEN_NO_SEARCH,
+                                         nullptr) == 0;
+      git_repository_free(r);
+
+      LIBGIT2_SHUTDOWN();
+
+      return ret;
     }
 
   public:

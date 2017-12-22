@@ -125,6 +125,7 @@ matrix:
 
 before_install:
   - eval "${MATRIX_EVAL}"
+  - sudo apt-get install -y valgrind
 
 before_script:
   - ${CC}  --version
@@ -133,3 +134,4 @@ before_script:
 
 script:
   - ./build.sh test
+  - ./build.sh memcheck

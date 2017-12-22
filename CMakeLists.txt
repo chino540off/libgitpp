@@ -12,12 +12,12 @@ INCLUDE(ExternalProject)
 # Download libgit2 from git and build it
 
 EXTERNALPROJECT_ADD(libgit2
-                    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libgit2
+                    PREFIX /tmp/build/libgit2
                     GIT_REPOSITORY https://github.com/libgit2/libgit2.git
                     GIT_TAG "v0.25.1"
                     CONFIGURE_COMMAND ${CMAKE_COMMAND} .
                                         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                                        -DCMAKE_BUILD_TYPE=${DCMAKE_BUILD_TYPE}
+                                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                     BUILD_COMMAND make
                     BUILD_IN_SOURCE 1
                     INSTALL_COMMAND make install)
@@ -40,8 +40,21 @@ INCLUDE_DIRECTORIES(
   ${LIBGIT2_INCLUDE_DIRS}
 )
 
-# Test app
-INCLUDE(CTest)
-ADD_SUBDIRECTORY(tests)
+#
+# Tests
+#
+IF("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  # MEMORYCHECK_COMMAND_OPTIONS needs to place prior to CTEST_MEMORYCHECK_COMMAND
+  SET(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full
+                                   --show-leak-kinds=definite,possible
+                                   --error-exitcode=1
+                                   --suppressions=${LIBGIT2_SOURCE_DIR}/libgit2_clar.supp")
+  SET(CTEST_MEMORYCHECK_COMMAND valgrind)
+
+  INCLUDE(CTest)
+
+  ADD_SUBDIRECTORY(tests)
+ENDIF()
+
 
 INSTALL(DIRECTORY include/ DESTINATION include)

@@ -1,5 +1,11 @@
 #! /bin/bash
 
+function clean_dir()
+{
+  rm -rf $1
+  mkdir $1
+}
+
 function _build()
 {
   if [ -d build ]; then
@@ -18,9 +24,22 @@ function _build()
 
 function _test()
 {
-  rm -rf /tmp/git-tests
-  mkdir /tmp/git-tests
+  clean_dir /tmp/git-tests
+  clean_dir /tmp/http-tests
+  clean_dir /tmp/https-tests
+
   make -C build test
+}
+
+function _memcheck()
+{
+  clean_dir /tmp/git-tests
+  clean_dir /tmp/http-tests
+  clean_dir /tmp/https-tests
+
+  cd build
+  ctest -T memcheck --output-on-failure || exit 1
+  cd -
 }
 
 function _cov()

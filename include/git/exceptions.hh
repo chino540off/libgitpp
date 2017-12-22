@@ -29,15 +29,23 @@ class exception: public std::exception
  *
  * @param error a libgit2 error code
  */
-void guard(int error)
+template <typename F>
+void guard(int error, F func)
 {
   if (error < 0)
   {
     auto e = git::exception(giterr_last());
     giterr_clear();
 
+    func();
+
     throw e;
   }
+}
+
+void guard(int error)
+{
+  guard(error, [](){});
 }
 
 } /** !git */

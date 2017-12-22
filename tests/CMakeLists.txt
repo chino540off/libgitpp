@@ -25,11 +25,11 @@ ADD_TEST_PASS(tests-git-clone-001 ${CMAKE_CURRENT_BINARY_DIR}/tests-git-clone
 ADD_TEST_FAIL(tests-git-clone-002 ${CMAKE_CURRENT_BINARY_DIR}/tests-git-clone
   git://github.com/chino540off/libgitpp.git /tmp/git-tests/libgitpp)
 
-ADD_TEST_PASS(tests-git-clone-003 ${CMAKE_CURRENT_BINARY_DIR}/tests-git-clone
-  http://github.com/chino540off/libgitpp.git /tmp/http-tests/libgitpp)
+#ADD_TEST_PASS(tests-git-clone-003 ${CMAKE_CURRENT_BINARY_DIR}/tests-git-clone
+#  http://github.com/chino540off/libgitpp.git /tmp/http-tests/libgitpp)
 
-ADD_TEST_PASS(tests-git-clone-004 ${CMAKE_CURRENT_BINARY_DIR}/tests-git-clone
-  https://github.com/chino540off/libgitpp.git /tmp/https-tests/libgitpp)
+#ADD_TEST_PASS(tests-git-clone-004 ${CMAKE_CURRENT_BINARY_DIR}/tests-git-clone
+#  https://github.com/chino540off/libgitpp.git /tmp/https-tests/libgitpp)
 
 ADD_TEST_PASS(tests-git-fetch-001 ${CMAKE_CURRENT_BINARY_DIR}/tests-git-fetch
   /tmp/git-tests/libgitpp origin)
