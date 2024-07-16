@@ -1,5 +1,4 @@
-#ifndef GIT_EXCEPTIONS_HH_
-#define GIT_EXCEPTIONS_HH_
+#pragma once
 
 #include <string>
 
@@ -40,5 +39,3 @@ void guard(int error) {
 }
 
 } // namespace git
-
-#endif /** !GIT_EXCEPTIONS_HH_  */

@@ -1,5 +1,4 @@
-#ifndef OID_HH_
-#define OID_HH_
+#pragma once
 
 #include <git2.h>
 
@@ -26,5 +25,3 @@ private:
 };
 
 } // namespace git
-
-#endif /** !OID_HH_  */

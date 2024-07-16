@@ -1,5 +1,4 @@
-#ifndef GIT_TREE_HH_
-#define GIT_TREE_HH_
+#pragma once
 
 #include <git2.h>
 
@@ -75,5 +74,3 @@ private:
 };
 
 } // namespace git
-
-#endif /** !GIT_TREE_HH_  */

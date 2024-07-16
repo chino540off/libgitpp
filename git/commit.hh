@@ -1,5 +1,4 @@
-#ifndef GIT_COMMIT_HH_
-#define GIT_COMMIT_HH_
+#pragma once
 
 #include <git2.h>
 
@@ -63,5 +62,3 @@ private:
 };
 
 } // namespace git
-
-#endif /** !GIT_COMMIT_HH_  */

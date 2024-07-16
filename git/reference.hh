@@ -1,5 +1,4 @@
-#ifndef GIT_REFERENCE_HH_
-#define GIT_REFERENCE_HH_
+#pragma once
 
 #include <git2.h>
 
@@ -83,5 +82,3 @@ private:
 };
 
 } // namespace git
-
-#endif /** !GIT_REFERENCE_HH_  */

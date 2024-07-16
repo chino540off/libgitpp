@@ -1,5 +1,4 @@
-#ifndef GIT_REPOSITORY_HH_
-#define GIT_REPOSITORY_HH_
+#pragma once
 
 #include <git2.h>
 
@@ -129,5 +128,3 @@ private:
 };
 
 } // namespace git
-
-#endif /** !GIT_REPOSITORY_HH_  */
