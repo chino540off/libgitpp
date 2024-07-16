@@ -16,10 +16,10 @@ function _build()
   cd build
   cmake \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DCMAKE_MODULE_PATH=$PWD/../cmake \
     -DCMAKE_INSTALL_PREFIX=$PWD/../local \
+    -G Ninja \
     ..
-  make
+  ninja
 }
 
 function _test()
@@ -28,7 +28,7 @@ function _test()
   clean_dir /tmp/http-tests
   clean_dir /tmp/https-tests
 
-  make -C build test
+  ninja -C build test
 }
 
 function _memcheck()
