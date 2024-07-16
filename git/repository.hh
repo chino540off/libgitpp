@@ -7,20 +7,17 @@
 
 #include <git/exceptions.hh>
 
-#define LIBGIT2_INIT()                                                         \
-  do {                                                                         \
-    git_libgit2_init();                                                        \
-    git_libgit2_features();                                                    \
-  } while (0)
-
-#define LIBGIT2_SHUTDOWN()                                                     \
-  do {                                                                         \
-    git_libgit2_shutdown();                                                    \
-  } while (0)
-
 namespace git {
 
 class repository {
+private:
+  static void init() {
+    git_libgit2_init();
+    git_libgit2_features();
+  }
+
+  static void shutdown() { git_libgit2_shutdown(); }
+
 public:
   repository(std::string const &path) {
     guard(git_repository_open(&repo_, path.c_str()));
@@ -31,7 +28,7 @@ public:
   ~repository() {
     git_repository_free(repo_);
 
-    LIBGIT2_SHUTDOWN();
+    shutdown();
   }
 
 public:
@@ -43,7 +40,7 @@ public:
    * @return a wrapper of the repository
    */
   static auto open(std::string const &path) {
-    LIBGIT2_INIT();
+    init();
 
     return std::make_shared<repository>(path);
   }
@@ -59,7 +56,7 @@ public:
    */
   static auto clone(std::string const &url, std::string const &path,
                     bool bare = true) {
-    LIBGIT2_INIT();
+    init();
 
     git_clone_options clone_opts;
     git_checkout_options checkout_opts;
@@ -73,7 +70,7 @@ public:
     git_repository *repo = nullptr;
 
     guard(git_clone(&repo, url.c_str(), path.c_str(), &clone_opts),
-          []() { LIBGIT2_SHUTDOWN(); });
+          []() { shutdown(); });
 
     return std::make_shared<repository>(repo);
   }
@@ -108,14 +105,14 @@ public:
   static auto is_repo(std::string const &path) {
     git_repository *r = nullptr;
 
-    LIBGIT2_INIT();
+    init();
 
     auto ret =
         git_repository_open_ext(&r, path.c_str(), GIT_REPOSITORY_OPEN_NO_SEARCH,
                                 nullptr) == 0;
     git_repository_free(r);
 
-    LIBGIT2_SHUTDOWN();
+    shutdown();
 
     return ret;
   }
