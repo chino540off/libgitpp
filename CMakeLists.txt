@@ -1,60 +1,70 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+project(libgitpp LANGUAGES CXX)
 
-PROJECT(hugtak)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-INCLUDE(CheckIncludeFiles)
+set(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -W -Wall -Wextra -Werror -Wno-multichar -pedantic")
+set(CMAKE_CXX_FLAGS_DEBUG " -O0 -ggdb -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS_RELEASE " -O2")
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
 
 # For some external project macros
-INCLUDE(ExternalProject)
+include(FetchContent)
 
 # Download libgit2 from git and build it
+FetchContent_Declare(
+  libgit2
+  GIT_REPOSITORY https://github.com/libgit2/libgit2.git
+  GIT_TAG v1.8.1
+  SYSTEM OVERRIDE_FIND_PACKAGE)
+set(BUILD_TESTS
+    OFF
+    CACHE BOOL "" FORCE)
+set(BUILD_CLI
+    OFF
+    CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES
+    OFF
+    CACHE BOOL "" FORCE)
+set(BUILD_FUZZERS
+    OFF
+    CACHE BOOL "" FORCE)
+set(libgit2_INSTALL YES)
+FetchContent_MakeAvailable(libgit2)
 
-EXTERNALPROJECT_ADD(libgit2
-                    PREFIX /tmp/build/libgit2
-                    GIT_REPOSITORY https://github.com/libgit2/libgit2.git
-                    GIT_TAG "v0.25.1"
-                    CONFIGURE_COMMAND ${CMAKE_COMMAND} .
-                                        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                                        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                    BUILD_COMMAND make
-                    BUILD_IN_SOURCE 1
-                    INSTALL_COMMAND make install)
-SET(LIBGIT2_INCLUDE_DIRS  ${CMAKE_INSTALL_PREFIX}/include)
-SET(LIBGIT2_LIBRARIES     ${CMAKE_INSTALL_PREFIX}/lib/libgit2.so)
-
-SET(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-SET(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -W -Wall -Wextra -Werror -Wno-multichar -pedantic")
-SET(CMAKE_CXX_FLAGS_DEBUG   " -O0 -ggdb -fprofile-arcs -ftest-coverage")
-SET(CMAKE_CXX_FLAGS_RELEASE " -O2")
-
-IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  SET(CMAKE_CXX_FLAGS       "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-ENDIF()
-
-INCLUDE_DIRECTORIES(
-  ${PROJECT_SOURCE_DIR}/include
-  ${LIBGIT2_INCLUDE_DIRS}
-)
+add_library(libgitpp INTERFACE)
+target_sources(
+  libgitpp
+  INTERFACE ${PROJECT_SOURCE_DIR}/git/reference.hh
+            ${PROJECT_SOURCE_DIR}/git/exceptions.hh
+            ${PROJECT_SOURCE_DIR}/git/blob.hh
+            ${PROJECT_SOURCE_DIR}/git/repository.hh
+            ${PROJECT_SOURCE_DIR}/git/tree.hh
+            ${PROJECT_SOURCE_DIR}/git/oid.hh
+            ${PROJECT_SOURCE_DIR}/git/commit.hh)
+target_include_directories(libgitpp INTERFACE ${PROJECT_SOURCE_DIR})
+target_link_libraries(libgitpp INTERFACE libgit2package libgit2)
 
 #
 # Tests
 #
-IF("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  # MEMORYCHECK_COMMAND_OPTIONS needs to place prior to CTEST_MEMORYCHECK_COMMAND
-  SET(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full
-                                   --show-leak-kinds=definite,possible
-                                   --error-exitcode=1
-                                   --suppressions=${LIBGIT2_SOURCE_DIR}/libgit2_clar.supp")
-  SET(CTEST_MEMORYCHECK_COMMAND valgrind)
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  # MEMORYCHECK_COMMAND_OPTIONS needs to place prior to
+  # CTEST_MEMORYCHECK_COMMAND
+  set(MEMORYCHECK_COMMAND_OPTIONS
+      "--leak-check=full
+      --show-leak-kinds=definite,possible
+      --error-exitcode=1
+      --suppressions=${LIBGIT2_SOURCE_DIR}/libgit2_clar.supp")
+  set(CTEST_MEMORYCHECK_COMMAND valgrind)
 
-  INCLUDE(CTest)
+  include(CTest)
 
-  ADD_SUBDIRECTORY(tests)
-ENDIF()
-
-
-INSTALL(DIRECTORY include/ DESTINATION include)
+  add_subdirectory(tests)
+endif()
